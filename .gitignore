@@ -1,0 +1,7 @@
+*.pyc
+*~
+
+Include/
+Lib/
+Scripts/
+*.sublime-*

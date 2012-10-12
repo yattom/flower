@@ -1,0 +1,1 @@
+Flower generates seeds which will eventually leave and plant themselves.

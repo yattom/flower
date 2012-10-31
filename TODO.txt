@@ -1,2 +1,14 @@
-Flower generates seeds which will eventually leave and plant themselves.
 Plants need interactions between physically surrounding environment (air, earth.)
+ Leaves take in mygen from air.
+  refactor out WorldEntityRepository from World
+  add EnvironmentalGrid
+  put every WorldEntity into an EnvironmentalGrid
+ Roots take moisture and heplon from earth or liquid water
+  EnvironmentalGrid has type
+  distinguish between liquid water and moisture as a material
+  water flow
+ Environment should be whole
+  let EnvironmentalGrids linked with each other
+  Grids exchange materials naturally
+Flower generates seeds which will eventually leave and plant themselves.
+Pollens must float in air and eventually reach other flowers.

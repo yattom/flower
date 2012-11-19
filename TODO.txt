@@ -1,4 +1,4 @@
-Move the workspace to crafttable
+Move the workspace to CraftTable
 Plants need interactions between physically surrounding environment (air, earth.)
  Leaves take in mygen from air.
   refactor out WorldEntityRepository from World

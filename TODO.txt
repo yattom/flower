@@ -1,5 +1,5 @@
 Move the workspace to CraftTable
- Automate tests
+ Automate tests with nose?
  Automate deploy
 Plants need interactions between physically surrounding environment (air, earth.)
  Leaves take in mygen from air.

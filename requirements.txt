@@ -1,3 +1,5 @@
+PyHamcrest==1.6
 nose==1.1.2
-pyhamcrest==1.6
+-e git://github.com/yattom/pypattern.git@ceb1ae67d4743303f1baa2c0260e214187788ced#egg=pypattern-dev
 should-dsl==2.0a4
+wsgiref==0.1.2

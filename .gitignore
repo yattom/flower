@@ -5,3 +5,10 @@ Include/
 Lib/
 Scripts/
 *.sublime-*
+
+bin/
+include/
+lib/
+man/
+src/
+

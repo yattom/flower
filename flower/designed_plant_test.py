@@ -13,7 +13,7 @@ class DesignedPlantTest(unittest.TestCase):
         World.reset()
 
     def test_planting_a_seed(self):
-        seed = Seed({}, {'root': { 'growth': {}}, 'stem': {'growth': {}}})
+        seed = Seed({}, PlantParameters({'root': { 'growth': {}}, 'stem': {'growth': {}}}))
         seed.root()
         seed.sprout()
 
@@ -27,7 +27,7 @@ class DesignedPlantTest(unittest.TestCase):
         ground = Ground(size=(1000.0, 1000.0), depth=(10.0))
         seed = Seed(
             {'kledis': 100.0},
-            {
+            PlantParameters({
                 'seed': {
                     'pooled_water_to_root': 100,
                     'water_for_seed': 10,
@@ -64,7 +64,7 @@ class DesignedPlantTest(unittest.TestCase):
                         }
                     }
                 },
-            })
+            }))
         ground.plant(seed, location=(500.0, 500.0))
 
         assert_that(seed._vein.part('root'), is_([]))
@@ -93,7 +93,7 @@ class DesignedPlantTest(unittest.TestCase):
     def test_leaves_synthesize_more_as_grow(self):
         leaves = Leaves(
             Vein(),
-            {
+            PlantParameters({
                 'leaves': {
                     'take_in': Materials({'mygen': 1.0}),
                     'consumption_for_synthesis': Materials({'mygen': 1.0, 'heplon': 1.0}),
@@ -105,7 +105,7 @@ class DesignedPlantTest(unittest.TestCase):
                         }
                     }
                 },
-            })
+            }))
         leaves.take_in_from_environment(Materials({'kledis': 100, 'mygen': 100.0, 'heplon': 100.0}))
 
         leaves_volume = leaves.growth.volume
@@ -124,7 +124,7 @@ class FlowerTest(unittest.TestCase):
     def setUp(self):
         World.reset()
         vein = Vein()
-        self.flower = Flower(vein, {
+        self.flower = Flower(vein, PlantParameters({
             'seed': {
                 'pooled_water_to_root': 100,
                 'water_for_seed': 10,
@@ -167,7 +167,7 @@ class FlowerTest(unittest.TestCase):
                     }
                 }
             }
-        })
+        }))
 
     def test_bloom_with_enough_nourishment(self):
         self.flower.take_in_from_environment({'kledis': 20.0})

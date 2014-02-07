@@ -37,13 +37,13 @@ class Seed(PlantPart):
                'sprouted', self.tick_for_sprouted)
 
     def tick_for_seed(self):
-        self.take_in_from_environment({'water': self._params['seed']['water_for_seed']})
-        if self._vein.pooled()['water'] >= self._params['seed']['pooled_water_to_root']:
+        self.take_in_from_environment({'water': self._params.seed.water_for_seed})
+        if self._vein.pooled()['water'] >= self._params.seed.pooled_water_to_root:
             self.root()
 
     def tick_for_rooted(self):
         for root in self._vein.part('root'):
-            if root.growth.volume >= self._params['seed']['length_to_sprout'] and self._vein.pooled()['water'] >= self._params['seed']['pooled_water_to_sprout']:
+            if root.growth.volume >= self._params.seed.length_to_sprout and self._vein.pooled()['water'] >= self._params.seed.pooled_water_to_sprout:
                 self.sprout()
                 break
 
@@ -62,7 +62,7 @@ class Seed(PlantPart):
 class Root(PlantPart):
     def __init__(self, vein, params):
         super(Root, self).__init__('root', vein, params)
-        self.growth = Growth(self, params['root']['growth'])
+        self.growth = Growth(self, params.root.growth)
 
     def tick(self):
         self.take_in_from_environment(self._params['root']['take_in_per_volume'] * self.growth.volume)
@@ -72,7 +72,7 @@ class Root(PlantPart):
 class Stem(PlantPart):
     def __init__(self, vein, params):
         super(Stem, self).__init__('stem', vein, params)
-        self.growth = Growth(self, params['stem']['growth'])
+        self.growth = Growth(self, params.stem.growth)
         self._leaves = None
 
     def tick(self):
@@ -87,19 +87,19 @@ class Stem(PlantPart):
 class Leaves(PlantPart):
     def __init__(self, vein, params):
         super(Leaves, self).__init__('leaves', vein, params)
-        self.growth = Growth(self, params['leaves']['growth'])
+        self.growth = Growth(self, params.leaves.growth)
 
     def tick(self):
         self.growth.grow()
-        self.take_in_from_environment(self._params['leaves']['take_in'] * self.growth.volume)
-        self.produce_material(self._params['leaves']['produce_for_synthesis'] * self.growth.volume, self._params['leaves']['consumption_for_synthesis'] * self.growth.volume)
+        self.take_in_from_environment(self._params.leaves.take_in * self.growth.volume)
+        self.produce_material(self._params.leaves.produce_for_synthesis * self.growth.volume, self._params.leaves.consumption_for_synthesis * self.growth.volume)
 
 
 class Flower(PlantPart):
     def __init__(self, vein, params):
         super(Flower, self).__init__('flower', vein, params)
-        self.pollen_generation = PlantPartGeneration(self, params['flower']['generation']['pollen'])
-        self.egg_generation = PlantPartGeneration(self, params['flower']['generation']['egg'])
+        self.pollen_generation = PlantPartGeneration(self, params.flower.generation.pollen)
+        self.egg_generation = PlantPartGeneration(self, params.flower.generation.egg)
         self.is_blooming = False
 
     def tick(self):
@@ -119,7 +119,7 @@ class Pollen(PlantPart):
 class Egg(PlantPart):
     def __init__(self, vein, params):
         super(Egg, self).__init__('egg', vein, params)
-        self.growth = Growth(self, params['egg']['growth'])
+        self.growth = Growth(self, params.egg.growth)
         self.is_ripen = False
         self.fertilized = False
         self.seed = None

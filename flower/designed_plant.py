@@ -87,15 +87,12 @@ class Stem(PlantPart):
 class Leaves(PlantPart):
     def __init__(self, vein, params):
         super(Leaves, self).__init__('leaves', vein, params)
-        self._volume = 0.0
+        self.growth = Growth(self, params['leaves']['growth'])
 
     def tick(self):
-        self.take_in_from_environment(self._params['leaves']['take_in'] * self._volume)
-        self.produce_material(self._params['leaves']['produce_for_synthesis'] * self._volume, self._params['leaves']['consumption_for_synthesis'] * self._volume)
-        self.grow()
-
-    def grow(self):
-        self._volume += 0.1
+        self.growth.grow()
+        self.take_in_from_environment(self._params['leaves']['take_in'] * self.growth.volume)
+        self.produce_material(self._params['leaves']['produce_for_synthesis'] * self.growth.volume, self._params['leaves']['consumption_for_synthesis'] * self.growth.volume)
 
 
 class Flower(PlantPart):

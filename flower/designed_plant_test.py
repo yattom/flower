@@ -57,6 +57,12 @@ class DesignedPlantTest(unittest.TestCase):
                     'take_in': Materials({'mygen': 1.0}),
                     'consumption_for_synthesis': Materials({'mygen': 1.0, 'heplon': 1.0}),
                     'produce_for_synthesis': Materials({'kledis': 1.0}),
+                    'growth': {
+                        'default': {
+                            'consumption_for_growth': Materials({}),
+                            'growth_volume': 0.1,
+                        }
+                    }
                 },
             })
         ground.plant(seed, location=(500.0, 500.0))
@@ -79,8 +85,39 @@ class DesignedPlantTest(unittest.TestCase):
         assert_that(seed._vein.part('leaves'), is_not([]), 'new leaves are generated')
 
         old_kledis_amount = seed._vein.pooled()['kledis']
+        leaves_volume = seed._vein.part('leaves')[0].growth.volume
+        tickn()
         tickn(30)
         assert_that(seed._vein.pooled()['kledis'], is_(greater_than(old_kledis_amount)), 'leaves generate kledis')
+
+    def test_leaves_synthesize_more_as_grow(self):
+        leaves = Leaves(
+            Vein(),
+            {
+                'leaves': {
+                    'take_in': Materials({'mygen': 1.0}),
+                    'consumption_for_synthesis': Materials({'mygen': 1.0, 'heplon': 1.0}),
+                    'produce_for_synthesis': Materials({'kledis': 1.0}),
+                    'growth': {
+                        'default': {
+                            'consumption_for_growth': Materials({}),
+                            'growth_volume': 0.1,
+                        }
+                    }
+                },
+            })
+        leaves.take_in_from_environment(Materials({'kledis': 100, 'mygen': 100.0, 'heplon': 100.0}))
+
+        leaves_volume = leaves.growth.volume
+        tickn()
+        leaves_volume_delta_first = leaves.growth.volume - leaves_volume
+        tickn(10)
+        assert_that(leaves.growth.volume, greater_than(leaves_volume))
+        leaves_volume_2 = leaves.growth.volume
+        tickn()
+        leaves_volume_delta_last = leaves.growth.volume - leaves_volume
+        assert_that(leaves_volume_delta_last, greater_than(leaves_volume_delta_first))
+
 
 
 class FlowerTest(unittest.TestCase):

@@ -17,11 +17,11 @@ class DesignedPlantTest(unittest.TestCase):
         seed.root()
         seed.sprout()
 
-        assert_that(seed._vein.pooled()['moisture'], is_(0))
-        seed._root.take_in_from_environment({'moisture': 100})
-        assert_that(seed._vein.pooled()['moisture'], is_(100))
-        seed._stem.consume_material(Materials({'moisture': 10}))
-        assert_that(seed._vein.pooled()['moisture'], is_(90))
+        assert_that(seed._vein.pooled()['water'], is_(0))
+        seed._root.take_in_from_environment({'water': 100})
+        assert_that(seed._vein.pooled()['water'], is_(100))
+        seed._stem.consume_material(Materials({'water': 10}))
+        assert_that(seed._vein.pooled()['water'], is_(90))
 
     def test_all_growth(self):
         ground = Ground(size=(1000.0, 1000.0), depth=(10.0))
@@ -30,12 +30,12 @@ class DesignedPlantTest(unittest.TestCase):
             {
                 'seed': {
                     'pooled_water_to_root': 100,
-                    'moisture_for_seed': 10,
+                    'water_for_seed': 10,
                     'length_to_sprout': 1.0,
                     'pooled_water_to_sprout': 200,
                 },
                 'root': {
-                    'take_in_per_volume': Materials({'moisture': 10.0, 'heplon': 2.0}),
+                    'take_in_per_volume': Materials({'water': 10.0, 'heplon': 2.0}),
                     'growth': {
                         'default': {
                             'max_volume': 2.0,
@@ -127,7 +127,7 @@ class FlowerTest(unittest.TestCase):
         self.flower = Flower(vein, {
             'seed': {
                 'pooled_water_to_root': 100,
-                'moisture_for_seed': 10,
+                'water_for_seed': 10,
                 'length_to_sprout': 1.0,
                 'pooled_water_to_sprout': 200,
             },

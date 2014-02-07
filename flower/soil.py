@@ -1,7 +1,7 @@
 # coding: utf-8
 
 class Materials(object):
-    NAMES = ['kledis', 'heplon', 'mygen', 'moisture']
+    NAMES = ['kledis', 'heplon', 'mygen', 'water']
 
     def __init__(self, d=None):
         self._contents = d if d else {}

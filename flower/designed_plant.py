@@ -8,8 +8,8 @@ from plant import *
 class Seed(PlantPart):
     '''
     This particular plant is grown from a seed
-    with moisture, heplon, kledis, and mygen.
-    Moisture is required for most mechanisms
+    with water, heplon, kledis, and mygen.
+    water is required for most mechanisms
     but not consumed but emitted to environment.
     Helpon and mygen are taken-in from environment
     and mostly converted to kledis by photonic synthesis.
@@ -37,13 +37,13 @@ class Seed(PlantPart):
                'sprouted', self.tick_for_sprouted)
 
     def tick_for_seed(self):
-        self.take_in_from_environment({'moisture': self._params['seed']['moisture_for_seed']})
-        if self._vein.pooled()['moisture'] >= self._params['seed']['pooled_water_to_root']:
+        self.take_in_from_environment({'water': self._params['seed']['water_for_seed']})
+        if self._vein.pooled()['water'] >= self._params['seed']['pooled_water_to_root']:
             self.root()
 
     def tick_for_rooted(self):
         for root in self._vein.part('root'):
-            if root.growth.volume >= self._params['seed']['length_to_sprout'] and self._vein.pooled()['moisture'] >= self._params['seed']['pooled_water_to_sprout']:
+            if root.growth.volume >= self._params['seed']['length_to_sprout'] and self._vein.pooled()['water'] >= self._params['seed']['pooled_water_to_sprout']:
                 self.sprout()
                 break
 

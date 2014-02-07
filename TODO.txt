@@ -1,3 +1,7 @@
+Flower and Leaves should use Growth.
+Create PlantParams as a convenient parameter storage.
+Flower generates seeds which will eventually leave and plant themselves.
+ Refactor out stamen and pistil from flower.
 Move the workspace to CraftTable
  Automate tests with nose
  Automate deploy
@@ -13,8 +17,8 @@ Plants need interactions between physically surrounding environment (air, earth.
  Environment should be whole
   let EnvironmentalGrids linked with each other
   Grids exchange materials naturally
-Flower generates seeds which will eventually leave and plant themselves.
 Pollens must float in air and eventually reach other flowers.
 WorldEntity should have ids for persistance.
 Logical way to exchange materials between entities/grids/etc.
+
 

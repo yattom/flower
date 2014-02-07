@@ -1,9 +1,9 @@
 # coding: utf-8
 
 from pattern import switch
-from event import EventDispatcher
 
 from soil import *
+from plant import *
 
 class Seed(PlantPart):
     '''
@@ -57,52 +57,6 @@ class Seed(PlantPart):
             return 'rooted'
         else:
             return 'sprouted'
-
-
-class Growth(object):
-    EVENTS = ['ON_MAXED']
-
-    def __init__(self, target, params):
-        self.target = target
-        self.params = params
-        self.volume = 0.0
-        self.events = EventDispatcher(Growth.EVENTS, observer=target)
-
-    def grow(self):
-        params = self.current_params()
-        if params['growth_volume'] == 0.0 or self.maxed_out(): return
-
-        self.target.consume_material(params['consumption_for_growth'])
-        self.volume += params['growth_volume']
-        if self.maxed_out():
-            self.volume = params['max_volume']
-            self.events.trigger(self.events.ON_MAXED)
-
-    def current_params(self):
-        params = self.params.get(self.target.state(), None)
-        if not params: params = self.params['default'] 
-        return params
-
-    def maxed_out(self):
-        return self.current_params().has_key('max_volume') and self.volume >= self.current_params()['max_volume']
-
-
-class PlantPartGeneration(object):
-    def __init__(self, target, params):
-        self._target = target
-        self._params = params
-        self._generated = []
-
-    def tick(self):
-        if self.maxed_out(): return
-
-        if self._target._vein.pooled() >= self._params['source_material']:
-            generated = self._target.generate_part(self._params['part_type'])
-            generated.consume_material(self._params['source_material'])
-            self._generated.append(generated)
-
-    def maxed_out(self):
-        return self._params.has_key('max_count') and len(self._generated) >= self._params['max_count']
 
 
 class Root(PlantPart):

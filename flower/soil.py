@@ -96,35 +96,6 @@ class WorldEntity(object):
         self.destroyed = True
 
 
-class PlantPart(WorldEntity):
-    def __init__(self, name, vein, params):
-        super(PlantPart, self).__init__()
-        self._vein = vein
-        self._vein.connect(name, self)
-        self._fixed_materials = Materials()
-        self._params = params
-
-    def take_in_from_environment(self, materials):
-        self._vein.pour_in(materials, source=self)
-
-    def consume_material(self, materials):
-        assert self._vein.pooled() >= materials
-        pumped_out = self._vein.pump_out(materials, self)
-        self._fixed_materials.add(pumped_out)
-
-    def produce_material(self, product, source):
-        for name in source:
-            assert self._vein.pooled()[name] >= source[name]
-        self._vein.pump_out(source, self)
-        self._vein.pour_in(product, source=self)
-
-    def generate_part(self, cls):
-        return cls(self._vein, self._params)
-
-    def state(self):
-        return None
-
-
 class Vein(object):
     def __init__(self):
         self._pooled = Materials()

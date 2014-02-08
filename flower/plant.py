@@ -81,14 +81,15 @@ class PlantPartGeneration(object):
 
 class ConventionalDict(object):
     def __init__(self, d):
-        self._d = d
+        self._d = dict(d)
+        for key in self._d:
+            if isinstance(self._d[key], dict):
+                self._d[key] = ConventionalDict(self._d[key])
 
     def __getitem__(self, key):
         if key and key.startswith('has_'):
             return self._d.has_key(key[len('has_'):])
         value = self._d.get(key)
-        if isinstance(value, dict):
-            return ConventionalDict(value)
         return value
 
     def __getattr__(self, name):

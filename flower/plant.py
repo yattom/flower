@@ -87,12 +87,11 @@ class ConventionalDict(object):
                 self._d[key] = ConventionalDict(self._d[key])
 
     def __getitem__(self, key):
-        if key and key.startswith('has_'):
-            return self._d.has_key(key[len('has_'):])
-        value = self._d.get(key)
-        return value
+        return self._d.get(key)
 
     def __getattr__(self, name):
+        if name.startswith('has_'):
+            return self._d.has_key(name[len('has_'):])
         return self[name]
 
     def get(self, key, default=None):

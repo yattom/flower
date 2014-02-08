@@ -20,17 +20,15 @@ class Seed(PlantPart):
 
     '''
 
-    def __init__(self, initial_contents, form_params):
-        super(Seed, self).__init__('seed', Vein(), form_params)
+    def __init__(self, initial_contents, params):
+        super(Seed, self).__init__('seed', Vein(), params)
         self._vein.pour_in(initial_contents, self)
 
     def root(self):
         self._root = self.generate_part(Root)
-        self._vein.connect('root', self._root)
 
     def sprout(self):
         self._stem = self.generate_part(Stem)
-        self._vein.connect('stem', self._stem)
 
     def tick(self):
         switch(self.state(),
@@ -39,13 +37,13 @@ class Seed(PlantPart):
                'sprouted', self.tick_for_sprouted)
 
     def tick_for_seed(self):
-        self.take_in_from_environment({'moisture': self.form_params['seed']['moisture_for_seed']})
-        if self._vein.pooled('moisture') >= self.form_params['seed']['pooled_water_to_root']:
+        self.take_in_from_environment({'moisture': self._params['seed']['moisture_for_seed']})
+        if self._vein.pooled()['moisture'] >= self._params['seed']['pooled_water_to_root']:
             self.root()
 
     def tick_for_rooted(self):
         for root in self._vein.part('root'):
-            if root.growth.volume >= self.form_params['seed']['length_to_sprout'] and self._vein.pooled('moisture') >= self.form_params['seed']['pooled_water_to_sprout']:
+            if root.growth.volume >= self._params['seed']['length_to_sprout'] and self._vein.pooled()['moisture'] >= self._params['seed']['pooled_water_to_sprout']:
                 self.sprout()
                 break
 
@@ -60,6 +58,7 @@ class Seed(PlantPart):
         else:
             return 'sprouted'
 
+
 class Growth(object):
     EVENTS = ['ON_MAXED']
 
@@ -70,27 +69,56 @@ class Growth(object):
         self.events = EventDispatcher(Growth.EVENTS, observer=target)
 
     def grow(self):
-        if self.params.has_key('max_volume') and self.volume > self.params['max_volume']:
+        params = self.current_params()
+        if params['growth_volume'] == 0.0 or self.maxed_out(): return
+
+        self.target.consume_material(params['consumption_for_growth'])
+        self.volume += params['growth_volume']
+        if self.maxed_out():
+            self.volume = params['max_volume']
             self.events.trigger(self.events.ON_MAXED)
-            return
-        self.target.consume_material(self.params['consumption_for_growth'])
-        self.volume += self.params['growth_volume']
+
+    def current_params(self):
+        params = self.params.get(self.target.state(), None)
+        if not params: params = self.params['default'] 
+        return params
+
+    def maxed_out(self):
+        return self.current_params().has_key('max_volume') and self.volume >= self.current_params()['max_volume']
+
+
+class PlantPartGeneration(object):
+    def __init__(self, target, params):
+        self._target = target
+        self._params = params
+        self._generated = []
+
+    def tick(self):
+        if self.maxed_out(): return
+
+        if self._target._vein.pooled() >= self._params['source_material']:
+            generated = self._target.generate_part(self._params['part_type'])
+            generated.consume_material(self._params['source_material'])
+            self._generated.append(generated)
+
+    def maxed_out(self):
+        return self._params.has_key('max_count') and len(self._generated) >= self._params['max_count']
 
 
 class Root(PlantPart):
-    def __init__(self, vein, form_params):
-        super(Root, self).__init__('root', vein, form_params)
-        self.growth = Growth(self, form_params['root']['growth'])
+    def __init__(self, vein, params):
+        super(Root, self).__init__('root', vein, params)
+        self.growth = Growth(self, params['root']['growth'])
 
     def tick(self):
-        self.take_in_from_environment(self.form_params['root']['take_in_per_volume'] * self.growth.volume)
+        self.take_in_from_environment(self._params['root']['take_in_per_volume'] * self.growth.volume)
         self.growth.grow()
 
 
 class Stem(PlantPart):
-    def __init__(self, vein, form_params):
-        super(Stem, self).__init__('stem', vein, form_params)
-        self.growth = Growth(self, form_params['stem']['growth'])
+    def __init__(self, vein, params):
+        super(Stem, self).__init__('stem', vein, params)
+        self.growth = Growth(self, params['stem']['growth'])
         self._leaves = None
 
     def tick(self):
@@ -103,13 +131,13 @@ class Stem(PlantPart):
 
 
 class Leaves(PlantPart):
-    def __init__(self, vein, form_params):
-        super(Leaves, self).__init__('leaves', vein, form_params)
+    def __init__(self, vein, params):
+        super(Leaves, self).__init__('leaves', vein, params)
         self._volume = 0.0
 
     def tick(self):
-        self.take_in_from_environment(self.form_params['leaves']['take_in'] * self._volume)
-        self.produce_material(self.form_params['leaves']['produce_for_synthesis'] * self._volume, self.form_params['leaves']['consumption_for_synthesis'] * self._volume)
+        self.take_in_from_environment(self._params['leaves']['take_in'] * self._volume)
+        self.produce_material(self._params['leaves']['produce_for_synthesis'] * self._volume, self._params['leaves']['consumption_for_synthesis'] * self._volume)
         self.grow()
 
     def grow(self):
@@ -117,41 +145,58 @@ class Leaves(PlantPart):
 
 
 class Flower(PlantPart):
-    def __init__(self, vein, form_params):
-        super(Flower, self).__init__('flower', vein, form_params)
-        self.pollens = []
-        self.egg = None
+    def __init__(self, vein, params):
+        super(Flower, self).__init__('flower', vein, params)
+        self.pollen_generation = PlantPartGeneration(self, params['flower']['generation']['pollen'])
+        self.egg_generation = PlantPartGeneration(self, params['flower']['generation']['egg'])
         self.is_blooming = False
 
     def tick(self):
-        if len(self.pollens) < 10:
-            if self._vein.pooled('kledis') >= 1.0:
-                pollen = self.generate_part(Pollen)
-                pollen.consume_material(Materials({'kledis': 1.0}))
-                self.pollens.append(pollen)
-        if not self.egg:
-            if self._vein.pooled('kledis') >= 1.0:
-                self.egg = self.generate_part(Egg)
+        self.pollen_generation.tick()
+        self.egg_generation.tick()
 
-        if len(self.pollens) >= 10 and self.egg.is_ripen:
+        if self.pollen_generation.maxed_out() and self.egg_generation.maxed_out() and self.egg_generation._generated[0].is_ripen:
             # once bloomed, stays in that status
             self.is_blooming = True
 
 
 class Pollen(PlantPart):
-    def __init__(self, vein, form_params):
-        super(Pollen, self).__init__('pollen', vein, form_params)
+    def __init__(self, vein, params):
+        super(Pollen, self).__init__('pollen', vein, params)
 
 
 class Egg(PlantPart):
-    def __init__(self, vein, form_params):
-        super(Egg, self).__init__('egg', vein, form_params)
-        self.growth = Growth(self, form_params['egg']['growth'])
+    def __init__(self, vein, params):
+        super(Egg, self).__init__('egg', vein, params)
+        self.growth = Growth(self, params['egg']['growth'])
         self.is_ripen = False
+        self.fertilized = False
+        self.seed = None
 
     def tick(self):
         self.growth.grow()
 
     @EventDispatcher.event_handler
     def on_maxed(self):
-        self.is_ripen = True
+        if self.state() == 'to_ripe':
+            self.is_ripen = True
+        elif self.state() == 'fertilized':
+            self.seed = Seed({}, self._params)
+            self.seed.take_in_from_environment(self._fixed_materials)
+            self._fixed_materials.empty()
+
+    def state(self):
+        if self.seed: return 'seeded'
+        if self.fertilized: return 'fertilized'
+        return 'to_ripe'
+
+class ReproducingRule(object):
+    def can_mate(self, egg, pollen):
+        if isinstance(egg, Egg) and isinstance(pollen, Pollen):
+            return True
+        return False
+
+    def mate(self, egg, pollen):
+        egg.fertilized = True
+        pollen.remove()
+        return

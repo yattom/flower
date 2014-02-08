@@ -15,3 +15,6 @@ Plants need interactions between physically surrounding environment (air, earth.
   Grids exchange materials naturally
 Flower generates seeds which will eventually leave and plant themselves.
 Pollens must float in air and eventually reach other flowers.
+WorldEntity should have ids for persistance.
+Logical way to exchange materials between entities/grids/etc.
+

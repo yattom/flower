@@ -1,27 +1,47 @@
 # coding: utf-8
 
 class Materials(object):
+    NAMES = ['kledis', 'heplon', 'mygen', 'moisture']
+
     def __init__(self, d=None):
-        self.__contents = d if d else {}
+        self._contents = d if d else {}
 
     def __getitem__(self, key):
-        return self.__contents.get(key, 0)
+        return self._contents.get(key, 0)
 
     def __setitem__(self, key, val):
-        self.__contents[key] = val
+        self._contents[key] = val
 
     def add(self, materials):
         for name in materials:
             self[name] += materials[name]
 
+    def empty(self):
+        self._contents.clear()
+
     def __iter__(self):
-        return self.__contents.__iter__()
+        return self._contents.__iter__()
 
     def __repr__(self):
-        return 'Materials(%s)'%(repr(self.__contents))
+        return 'Materials(%s)'%(repr(self._contents))
 
     def __mul__(self, number):
-        return Materials(dict([(k, self.__contents[k] * number) for k in self.__contents]))
+        return Materials(dict([(k, self._contents[k] * number) for k in self._contents]))
+
+    def __eq__(self, other):
+        return self._contents == other._contents
+
+    def __lt__(self, other):
+        return all(self[name] < other[name] for name in Materials.NAMES)
+
+    def __le__(self, other):
+        return all(self[name] <= other[name] for name in Materials.NAMES)
+
+    def __gt__(self, other):
+        return all(self[name] > other[name] for name in Materials.NAMES)
+
+    def __ge__(self, other):
+        return all(self[name] >= other[name] for name in Materials.NAMES)
 
 class World(object):
     entities = []
@@ -36,10 +56,10 @@ class World(object):
                 e.tick()
         finally:
             World.tick_in_progress = False
-            World.add_entities_after_tick()
+            World._add_entities_after_tick()
 
     @staticmethod
-    def add_entities_after_tick():
+    def _add_entities_after_tick():
         for e in World.entities_to_add_after_tick:
             World.add(e)
         del(World.entities_to_add_after_tick[:])
@@ -55,6 +75,11 @@ class World(object):
         World.entities.append(entity)
 
     @staticmethod
+    def remove(entity):
+        if entity not in World.entities: return
+        World.entities.remove(entity)
+
+    @staticmethod
     def reset():
         World.entities = []
 
@@ -66,62 +91,73 @@ class WorldEntity(object):
     def tick(self):
         pass
 
+    def remove(self):
+        World.remove(self)
+        self.destroyed = True
+
 
 class PlantPart(WorldEntity):
-    def __init__(self, name, vein, form_params):
+    def __init__(self, name, vein, params):
         super(PlantPart, self).__init__()
         self._vein = vein
         self._vein.connect(name, self)
-        self.fixed_materials = Materials()
-        self.form_params = form_params
+        self._fixed_materials = Materials()
+        self._params = params
 
     def take_in_from_environment(self, materials):
         self._vein.pour_in(materials, source=self)
 
     def consume_material(self, materials):
-        for name in materials:
-            assert self._vein.pooled(name) >= materials[name]
+        assert self._vein.pooled() >= materials
         pumped_out = self._vein.pump_out(materials, self)
-        self.fixed_materials.add(pumped_out)
+        self._fixed_materials.add(pumped_out)
 
-    def produce_material(self, dest, src):
-        for name in src:
-            assert self._vein.pooled(name) >= src[name]
-        self._vein.pump_out(src, self)
-        self._vein.pour_in(dest, source=self)
+    def produce_material(self, product, source):
+        for name in source:
+            assert self._vein.pooled()[name] >= source[name]
+        self._vein.pump_out(source, self)
+        self._vein.pour_in(product, source=self)
 
     def generate_part(self, cls):
-        return cls(self._vein, self.form_params)
+        return cls(self._vein, self._params)
+
+    def state(self):
+        return None
+
 
 class Vein(object):
     def __init__(self):
-        self.__pooled = Materials()
-        self.__parts = {}
+        self._pooled = Materials()
+        self._parts = {}
 
     def connect(self, name, part):
-        assert part not in self.__parts
-        if name not in self.__parts:
-            self.__parts[name] = []
-        self.__parts[name].append(part)
+        assert not self.has_part(part), "cannot connect same part twice"
+        if name not in self._parts:
+            self._parts[name] = []
+        self._parts[name].append(part)
 
     def part(self, name):
-        return self.__parts.get(name, [])
+        return self._parts.get(name, [])
 
     def pour_in(self, materials, source):
-        assert source in [i for sublist in self.__parts.values() for i in sublist]
+        assert self.has_part(source)
         for name in materials:
-            self.__pooled[name] += materials[name]
+            self._pooled[name] += materials[name]
 
     def pump_out(self, materials, dest):
-        assert dest in [i for sublist in self.__parts.values() for i in sublist]
+        assert self.has_part(dest)
         out = Materials()
         for name in materials:
-            self.__pooled[name] -= materials[name]
+            self._pooled[name] -= materials[name]
             out[name] += materials[name]
         return out
 
-    def pooled(self, material):
-        return self.__pooled[material]
+    def pooled(self):
+        return self._pooled
+
+    def has_part(self, part):
+        return any([part in parts for parts in self._parts.values()])
+
 
 class Ground(object):
     def __init__(self, size, depth):

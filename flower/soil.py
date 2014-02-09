@@ -16,7 +16,7 @@ class Materials(object):
         for name in materials:
             self[name] += materials[name]
 
-    def empty(self):
+    def clear(self):
         self._contents.clear()
 
     def __iter__(self):

@@ -134,7 +134,7 @@ class Egg(PlantPart):
         elif self.state() == 'fertilized':
             self.seed = Seed({}, self._params)
             self.seed.take_in_from_environment(self._fixed_materials)
-            self._fixed_materials.empty()
+            self._fixed_materials.clear()
 
     def state(self):
         if self.seed: return 'seeded'

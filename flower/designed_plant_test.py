@@ -131,6 +131,25 @@ class FlowerTest(unittest.TestCase):
                 'length_to_sprout': 1.0,
                 'pooled_water_to_sprout': 200,
             },
+            'root': {
+                'take_in_per_volume': Materials({'water': 10.0, 'heplon': 2.0}),
+                'growth': {
+                    'default': {
+                        'max_volume': 2.0,
+                        'consumption_for_growth': Materials({'kledis': 1.0}),
+                        'growth_volume': 0.1,
+                    }
+                },
+            },
+            'stem': {
+                'growth': {
+                    'default': {
+                        'max_volume': 0.5,
+                        'consumption_for_growth': Materials({'kledis': 3.0}),
+                        'growth_volume': 0.1,
+                    }
+                }
+            },
             'flower': {
                 'growth': {
                     'default': {
@@ -200,3 +219,15 @@ class FlowerTest(unittest.TestCase):
         assert_that(egg.growth.volume, equal_to(10.0))
         assert_that(egg.seed, is_not(None))
 
+    def test_produced_seeds_will_live(self):
+        self.flower.take_in_from_environment({'kledis': 21.0})
+        tickn(10)
+        pollen = self.flower._vein.part('pollen')[0]
+        egg = self.flower._vein.part('egg')[0]
+        ReproducingRule().mate(egg, pollen)
+        tickn(10)
+
+        seed = egg.seed
+        assert_that(seed._vein.part('root'), is_([]))
+        tickn(10)
+        assert_that(seed._vein.part('root'), is_not([]), 'a new root is sprouted')

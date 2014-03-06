@@ -228,6 +228,7 @@ class FlowerTest(unittest.TestCase):
         tickn(10)
 
         seed = egg.seed
+        assert_that(seed._vein, is_not(self.flower._vein), 'produced seed has its own vein')
         assert_that(seed._vein.part('root'), is_([]))
         tickn(10)
         assert_that(seed._vein.part('root'), is_not([]), 'a new root is sprouted')

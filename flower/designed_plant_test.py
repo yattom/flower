@@ -1,5 +1,6 @@
 import unittest
 from hamcrest import *
+from hamcrest.core.base_matcher import BaseMatcher
 
 #from soil import *
 from designed_plant import *
@@ -89,6 +90,23 @@ class Params(object):
     }
 
 
+
+class HasPart(BaseMatcher):
+    def __init__(self, part_name):
+        self.part_name = part_name
+
+    def _matches(self, item):
+        return len(item._vein.part(self.part_name)) > 0
+
+    def describe_to(self, descripition):
+        descripition.append_text('has part "%s"'%(self.part_name))
+
+def has_part(name):
+    return HasPart(name)
+
+def has_no_part(name):
+    return is_not(has_part(name))
+
 class DesignedPlantTest(unittest.TestCase):
     def setUp(self):
         World.reset()
@@ -116,10 +134,11 @@ class DesignedPlantTest(unittest.TestCase):
             }))
         ground.plant(seed, location=(500.0, 500.0))
 
-        assert_that(seed._vein.part('root'), is_([]))
+        assert_that(seed, has_part('seed'))
+        assert_that(seed, has_no_part('root'))
 
         tickn(10)
-        assert_that(seed._vein.part('root'), is_not([]), 'a new root is sprouted')
+        assert_that(seed, has_part('root'), 'a new root is sprouted')
 
         i = 0
         while not seed._vein.part('stem'):
@@ -127,11 +146,11 @@ class DesignedPlantTest(unittest.TestCase):
             tickn()
             i += 1
 
-        assert_that(seed._vein.part('stem'), is_not([]), 'a new stem sprouted')
+        assert_that(seed, has_part('stem'), 'a new stem is sprouted')
 
         while not seed._vein.part('leaves'):
             tickn()
-        assert_that(seed._vein.part('leaves'), is_not([]), 'new leaves are generated')
+        assert_that(seed, has_part('leaves'), 'a new leaves is sprouted')
 
         old_kledis_amount = seed._vein.pooled()['kledis']
         leaves_volume = seed._vein.part('leaves')[0].growth.volume

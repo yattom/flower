@@ -107,6 +107,55 @@ def has_part(name):
 def has_no_part(name):
     return is_not(has_part(name))
 
+
+import operator
+class Proxy(object):
+    def __init__(self, subject):
+        self._v.subject = subject
+        self._v.operations = []
+
+    def __getattr__(self, name):
+        print "attr: " + name
+        subj = self._v.operations[-1][1] if self._v.operations else self._v.subject
+        op = (subj.__getattribute__, (name,), {})
+        val = subj.__getattribute__(name)
+        self._v.operations.append((op, val))
+        return self
+
+    def __getitem__(self, idx):
+        subj = self._v.operations[-1][1] if self._v.operations else self._v.subject
+        op = (operator.getitem, (subj, idx), {})
+        val = operator.getitem(subj, idx)
+        self._v.operations.append((op, val))
+        return self
+
+    def __call__(self, *args, **kwargs):
+        subj = self._v.operations[-1][1] if self._v.operations else self._v.subject
+        op = (subj.__call__, args, kwargs)
+        val = subj.__call__(*args, **kwargs)
+        self._v.operations.append((op, val))
+        return self
+
+    def current(self):
+        subj = self._v.operations[-1][1] if self._v.operations else self._v.subject
+        return subj
+
+    def before(self):
+        subj = self._v.operations[-1][1] if self._v.operations else self._v.subject
+        return subj
+
+
+class Fixture(Proxy):
+    def __init__(self, subject):
+        self.subject = subject
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return False
+
+
 class DesignedPlantTest(unittest.TestCase):
     def setUp(self):
         World.reset()
@@ -157,6 +206,13 @@ class DesignedPlantTest(unittest.TestCase):
         tickn()
         tickn(30)
         assert_that(seed._vein.pooled()['kledis'], is_(greater_than(old_kledis_amount)), 'leaves generate kledis')
+
+        with Fixture(seed) as target:
+            kledis_amount = target._vein.pooled()['kledis']
+            print target._vein.pooled()['kledis'].current()
+            tickn(30)
+            print target._vein.pooled()['kledis'].current()
+            assert_that(kledis_amount.current(), is_(greater_than(kledis_amount.before())), 'leaves generate kledis')
 
     def test_leaves_synthesize_more_as_grow(self):
         leaves = Leaves(

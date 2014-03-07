@@ -8,6 +8,87 @@ def tickn(n = 1):
     for i in range(n):
         World.tick()
 
+
+class Params(object):
+    seed = {
+        'pooled_water_to_root': 100,
+        'water_for_seed': 10,
+        'length_to_sprout': 1.0,
+        'pooled_water_to_sprout': 200,
+    }
+
+    root = {
+        'take_in_per_volume': Materials({'water': 10.0, 'heplon': 2.0}),
+        'growth': {
+            'default': {
+                'max_volume': 2.0,
+                'consumption_for_growth': Materials({'kledis': 1.0}),
+                'growth_volume': 0.1,
+            }
+        },
+    }
+
+    stem = {
+        'growth': {
+            'default': {
+                'max_volume': 0.5,
+                'consumption_for_growth': Materials({'kledis': 3.0}),
+                'growth_volume': 0.1,
+            }
+        }
+    }
+
+    leaves = {
+        'take_in': Materials({'mygen': 1.0}),
+        'consumption_for_synthesis': Materials({'mygen': 1.0, 'heplon': 1.0}),
+        'produce_for_synthesis': Materials({'kledis': 1.0}),
+        'growth': {
+            'default': {
+                'consumption_for_growth': Materials({}),
+                'growth_volume': 0.1,
+            }
+        }
+    }
+
+    flower = {
+        'growth': {
+            'default': {
+                'growth_volume': 0.0,
+            }
+        },
+        'generation': {
+            'pollen': {
+                'max_count': 10,
+                'source_material': Materials({'kledis': 1.0}),
+                'part_type': Pollen,
+            },
+            'egg': {
+                'max_count': 1,
+                'source_material': Materials({'kledis': 1.0}),
+                'part_type': Egg,
+            }
+        },
+    }
+
+    egg = {
+        'growth': {
+            'to_ripe': {
+                'max_volume': 5.0,
+                'consumption_for_growth': Materials({'kledis': 1.0}),
+                'growth_volume': 1.0,
+            },
+            'fertilized': {
+                'max_volume': 10.0,
+                'consumption_for_growth': Materials({'kledis': 1.0}),
+                'growth_volume': 1.0,
+            },
+            'seeded': {
+                'growth_volume': 0.0,
+            }
+        }
+    }
+
+
 class DesignedPlantTest(unittest.TestCase):
     def setUp(self):
         World.reset()
@@ -28,42 +109,10 @@ class DesignedPlantTest(unittest.TestCase):
         seed = Seed(
             {'kledis': 100.0},
             PlantParameters({
-                'seed': {
-                    'pooled_water_to_root': 100,
-                    'water_for_seed': 10,
-                    'length_to_sprout': 1.0,
-                    'pooled_water_to_sprout': 200,
-                },
-                'root': {
-                    'take_in_per_volume': Materials({'water': 10.0, 'heplon': 2.0}),
-                    'growth': {
-                        'default': {
-                            'max_volume': 2.0,
-                            'consumption_for_growth': Materials({'kledis': 1.0}),
-                            'growth_volume': 0.1,
-                        }
-                    },
-                },
-                'stem': {
-                    'growth': {
-                        'default': {
-                            'max_volume': 0.5,
-                            'consumption_for_growth': Materials({'kledis': 3.0}),
-                            'growth_volume': 0.1,
-                        }
-                    }
-                },
-                'leaves': {
-                    'take_in': Materials({'mygen': 1.0}),
-                    'consumption_for_synthesis': Materials({'mygen': 1.0, 'heplon': 1.0}),
-                    'produce_for_synthesis': Materials({'kledis': 1.0}),
-                    'growth': {
-                        'default': {
-                            'consumption_for_growth': Materials({}),
-                            'growth_volume': 0.1,
-                        }
-                    }
-                },
+                'seed': Params.seed,
+                'root': Params.root,
+                'stem': Params.stem,
+                'leaves': Params.leaves,
             }))
         ground.plant(seed, location=(500.0, 500.0))
 
@@ -94,17 +143,7 @@ class DesignedPlantTest(unittest.TestCase):
         leaves = Leaves(
             Vein(),
             PlantParameters({
-                'leaves': {
-                    'take_in': Materials({'mygen': 1.0}),
-                    'consumption_for_synthesis': Materials({'mygen': 1.0, 'heplon': 1.0}),
-                    'produce_for_synthesis': Materials({'kledis': 1.0}),
-                    'growth': {
-                        'default': {
-                            'consumption_for_growth': Materials({}),
-                            'growth_volume': 0.1,
-                        }
-                    }
-                },
+                'leaves': Params.leaves,
             }))
         leaves.take_in_from_environment(Materials({'kledis': 100, 'mygen': 100.0, 'heplon': 100.0}))
 
@@ -125,67 +164,11 @@ class FlowerTest(unittest.TestCase):
         World.reset()
         vein = Vein()
         self.flower = Flower(vein, PlantParameters({
-            'seed': {
-                'pooled_water_to_root': 100,
-                'water_for_seed': 10,
-                'length_to_sprout': 1.0,
-                'pooled_water_to_sprout': 200,
-            },
-            'root': {
-                'take_in_per_volume': Materials({'water': 10.0, 'heplon': 2.0}),
-                'growth': {
-                    'default': {
-                        'max_volume': 2.0,
-                        'consumption_for_growth': Materials({'kledis': 1.0}),
-                        'growth_volume': 0.1,
-                    }
-                },
-            },
-            'stem': {
-                'growth': {
-                    'default': {
-                        'max_volume': 0.5,
-                        'consumption_for_growth': Materials({'kledis': 3.0}),
-                        'growth_volume': 0.1,
-                    }
-                }
-            },
-            'flower': {
-                'growth': {
-                    'default': {
-                        'growth_volume': 0.0,
-                    }
-                },
-                'generation': {
-                    'pollen': {
-                        'max_count': 10,
-                        'source_material': Materials({'kledis': 1.0}),
-                        'part_type': Pollen,
-                    },
-                    'egg': {
-                        'max_count': 1,
-                        'source_material': Materials({'kledis': 1.0}),
-                        'part_type': Egg,
-                    }
-                },
-            },
-            'egg': {
-                'growth': {
-                    'to_ripe': {
-                        'max_volume': 5.0,
-                        'consumption_for_growth': Materials({'kledis': 1.0}),
-                        'growth_volume': 1.0,
-                    },
-                    'fertilized': {
-                        'max_volume': 10.0,
-                        'consumption_for_growth': Materials({'kledis': 1.0}),
-                        'growth_volume': 1.0,
-                    },
-                    'seeded': {
-                        'growth_volume': 0.0,
-                    }
-                }
-            }
+            'seed': Params.seed,
+            'root': Params.root,
+            'stem': Params.stem,
+            'flower': Params.flower,
+            'egg': Params.egg,
         }))
 
     def test_bloom_with_enough_nourishment(self):

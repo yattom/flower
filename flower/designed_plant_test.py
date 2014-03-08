@@ -175,9 +175,7 @@ class DesignedPlantTest(unittest.TestCase):
 
         with Fixture(seed) as target:
             kledis_amount = target._vein.pooled()['kledis']
-            print target._vein.pooled()['kledis'].current()
             tickn(30)
-            print target._vein.pooled()['kledis'].current()
             assert_that(kledis_amount.current(), is_(greater_than(kledis_amount.before())), 'leaves generate kledis')
 
     def test_leaves_synthesize_more_as_grow(self):

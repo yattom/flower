@@ -1,6 +1,7 @@
 import unittest
 from hamcrest import *
 from hamcrest.core.base_matcher import BaseMatcher
+from recorder import Recorder
 
 #from soil import *
 from designed_plant import *
@@ -108,20 +109,6 @@ def has_no_part(name):
     return is_not(has_part(name))
 
 
-import operator
-from proxy import Proxy
-
-class Fixture(Proxy):
-    def __init__(self, subject):
-        super(Fixture, self).__init__(subject)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return False
-
-
 class DesignedPlantTest(unittest.TestCase):
     def setUp(self):
         World.reset()
@@ -173,10 +160,9 @@ class DesignedPlantTest(unittest.TestCase):
         tickn(30)
         assert_that(seed._vein.pooled()['kledis'], is_(greater_than(old_kledis_amount)), 'leaves generate kledis')
 
-        with Fixture(seed) as target:
-            kledis_amount = target._vein.pooled()['kledis']
-            tickn(30)
-            assert_that(kledis_amount.current(), is_(greater_than(kledis_amount.before())), 'leaves generate kledis')
+        kledis_amount = Recorder(seed)._vein.pooled()['kledis']
+        tickn(30)
+        assert_that(kledis_amount.current(), is_(greater_than(kledis_amount.before())), 'leaves generate kledis')
 
     def test_leaves_synthesize_more_as_grow(self):
         leaves = Leaves(

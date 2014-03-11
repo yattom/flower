@@ -1,15 +1,15 @@
 import operator
-class Proxy(object):
+class Recorder(object):
     '''
-    Create a proxy wrapping an arbitrary object.  Calling a proxy
+    Create a proxy wrapping an arbitrary object.  Calling the proxy
     results in another proxy.  current() will retrieve the actual value.
     >>> d = {'a': 0}
-    >>> p_d = Proxy(d)
+    >>> p_d = Recorder(d)
     >>> a_of_d = p_d['a']
     >>> a_of_d.current()
     0
 
-    Wrapped object can be modified. Proxy remembers the value
+    Wrapped object can be modified. Recorder remembers the value
     when it first created and it can be read by before().
     >>> d['a'] = 1
     >>> a_of_d.current()
@@ -20,7 +20,7 @@ class Proxy(object):
     Chained invocations all create proxies.  current() works as expected
     also in this case.
     >>> d = {'a': {'x': 1}}
-    >>> p_d = Proxy(d)
+    >>> p_d = Recorder(d)
     >>> a_of_d = p_d['a']
     >>> x_of_a_of_d = p_d['a']['x']
     >>> d['a'] = {'y': 2}
@@ -58,25 +58,25 @@ class Proxy(object):
             return subject.__call__(*self.args, **self.kwargs)
 
     def __init__(self, subject, precedes=None, operation=None):
-        self.__v = Proxy.Storage()
+        self.__v = Recorder.Storage()
         self.__v.subject = subject
         self.__v.precedes = precedes
         self.__v.operation = operation
 
     def __getattr__(self, name):
-        op = Proxy.Attr(name)
+        op = Recorder.Attr(name)
         val = op.evaluate(self.__v.subject)
-        return Proxy(val, self, op)
+        return Recorder(val, self, op)
 
     def __getitem__(self, idx):
-        op = Proxy.GetItem(idx)
+        op = Recorder.GetItem(idx)
         val = op.evaluate(self.__v.subject)
-        return Proxy(val, self, op)
+        return Recorder(val, self, op)
 
     def __call__(self, *args, **kwargs):
-        op = Proxy.Call(args, kwargs)
+        op = Recorder.Call(args, kwargs)
         val = op.evaluate(self.__v.subject)
-        return Proxy(val, self, op)
+        return Recorder(val, self, op)
 
     def current(self):
         if not self.__v.precedes:

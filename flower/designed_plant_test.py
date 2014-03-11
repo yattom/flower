@@ -166,15 +166,16 @@ class DesignedPlantTest(unittest.TestCase):
             }))
         leaves.take_in_from_environment(Materials({'kledis': 100, 'mygen': 100.0, 'heplon': 100.0}))
 
-        leaves_volume = leaves.growth.volume
-        tickn()
-        leaves_volume_delta_first = leaves.growth.volume - leaves_volume
-        tickn(10)
-        assert_that(leaves.growth.volume, greater_than(leaves_volume))
-        leaves_volume_2 = leaves.growth.volume
-        tickn()
-        leaves_volume_delta_last = leaves.growth.volume - leaves_volume
-        assert_that(leaves_volume_delta_last, greater_than(leaves_volume_delta_first))
+        def part_volume_delta(part):
+            before = part.growth.volume
+            tickn()
+            after = part.growth.volume
+            return after - before
+        leaves_volume = Recorder(leaves).growth.volume
+        delta = Recorder(part_volume_delta)(leaves)
+        tickn(0)
+        assert_that(leaves_volume.current(), greater_than(leaves_volume.before()))
+        assert_that(delta.current(), greater_than(delta.before()))
 
 
 

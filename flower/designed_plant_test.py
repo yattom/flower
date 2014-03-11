@@ -109,6 +109,27 @@ def has_no_part(name):
     return is_not(has_part(name))
 
 
+def assert_eventually_grow(part, part_name):
+    assert_that(part, has_no_part(part_name), 'there is no such part at first')
+    while not part._vein.part(part_name):
+        tickn()
+    assert_that(part, has_part(part_name), 'a new part is produced')
+
+
+def material_amount_delta(vein, material_name):
+    before = vein.pooled()[material_name]
+    tickn()
+    after = vein.pooled()[material_name]
+    return after - before
+
+
+def part_volume_delta(part):
+    before = part.growth.volume
+    tickn()
+    after = part.growth.volume
+    return after - before
+
+
 class DesignedPlantTest(unittest.TestCase):
     def setUp(self):
         World.reset()
@@ -137,26 +158,31 @@ class DesignedPlantTest(unittest.TestCase):
         ground.plant(seed, location=(500.0, 500.0))
 
         assert_that(seed, has_part('seed'))
-        assert_that(seed, has_no_part('root'))
 
-        tickn(10)
-        assert_that(seed, has_part('root'), 'a new root is sprouted')
+        assert_eventually_grow(seed, 'root')
+        assert_eventually_grow(seed, 'stem')
+        assert_eventually_grow(seed, 'leaves')
+
+        kledis_amount = Recorder(seed)._vein.pooled()['kledis']
+        tickn(30)
+        assert_that(kledis_amount.current(), is_(greater_than(kledis_amount.before())), 'leaves generate kledis')
+
+    def test_root_growth_speed(self):
+        seed = Seed(
+            {'kledis': 100.0},
+            PlantParameters({
+                'seed': Params.seed,
+                'root': Params.root,
+                'stem': Params.stem,
+            }))
+
+        assert_eventually_grow(seed, 'root')
 
         i = 0
         while not seed._vein.part('stem'):
             assert_that(seed._vein.part('root')[0].growth.volume, close_to(i * 0.1, 0.01))
             tickn()
             i += 1
-
-        assert_that(seed, has_part('stem'), 'a new stem is sprouted')
-
-        while not seed._vein.part('leaves'):
-            tickn()
-        assert_that(seed, has_part('leaves'), 'a new leaves is sprouted')
-
-        kledis_amount = Recorder(seed)._vein.pooled()['kledis']
-        tickn(30)
-        assert_that(kledis_amount.current(), is_(greater_than(kledis_amount.before())), 'leaves generate kledis')
 
     def test_leaves_synthesize_more_as_grow(self):
         leaves = Leaves(
@@ -166,11 +192,6 @@ class DesignedPlantTest(unittest.TestCase):
             }))
         leaves.take_in_from_environment(Materials({'kledis': 100, 'mygen': 100.0, 'heplon': 100.0}))
 
-        def material_amount_delta(vein, material_name):
-            before = vein.pooled()[material_name]
-            tickn()
-            after = vein.pooled()[material_name]
-            return after - before
         leaves_volume = Recorder(leaves).growth.volume
         delta = Recorder(material_amount_delta)(leaves._vein, 'kledis')
         tickn(10)
@@ -206,7 +227,8 @@ class FlowerTest(unittest.TestCase):
         self.flower.take_in_from_environment({'kledis': 20.0})
         tickn(10)
         egg = self.flower._vein.part('egg')[0]
-        assert_that(egg.growth.volume, equal_to(5.0))
+        assert_that(part_volume_delta(egg), is_(0))
+        assert_that(egg.growth.volume, is_(egg._params.egg.growth.to_ripe.max_volume))
 
     def test_egg_and_pollen_produces_seeds(self):
         self.flower.take_in_from_environment({'kledis': 21.0})

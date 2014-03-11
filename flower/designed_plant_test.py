@@ -154,12 +154,6 @@ class DesignedPlantTest(unittest.TestCase):
             tickn()
         assert_that(seed, has_part('leaves'), 'a new leaves is sprouted')
 
-        old_kledis_amount = seed._vein.pooled()['kledis']
-        leaves_volume = seed._vein.part('leaves')[0].growth.volume
-        tickn()
-        tickn(30)
-        assert_that(seed._vein.pooled()['kledis'], is_(greater_than(old_kledis_amount)), 'leaves generate kledis')
-
         kledis_amount = Recorder(seed)._vein.pooled()['kledis']
         tickn(30)
         assert_that(kledis_amount.current(), is_(greater_than(kledis_amount.before())), 'leaves generate kledis')
